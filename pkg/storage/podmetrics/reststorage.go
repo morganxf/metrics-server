@@ -22,7 +22,7 @@ import (
 	"github.com/golang/glog"
 
 	"github.com/kubernetes-incubator/metrics-server/pkg/provider"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metainternalversion "k8s.io/apimachinery/pkg/apis/meta/internalversion"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -85,7 +85,7 @@ func (m *MetricStorage) List(ctx context.Context, options *metainternalversion.L
 		return &metrics.PodMetricsList{}, errMsg
 	}
 
-	metricsItems, err := m.getPodMetrics(pods...)
+	metricsItems, err := m.getPodMetrics(ctx, pods...)
 	if err != nil {
 		errMsg := fmt.Errorf("Error while fetching pod metrics for selector %v in namespace %q: %v", labelSelector, namespace, err)
 		glog.Error(errMsg)
@@ -113,7 +113,7 @@ func (m *MetricStorage) Get(ctx context.Context, name string, opts *metav1.GetOp
 		return &metrics.PodMetrics{}, errors.NewNotFound(v1.Resource("pods"), fmt.Sprintf("%v/%v", namespace, name))
 	}
 
-	podMetrics, err := m.getPodMetrics(pod)
+	podMetrics, err := m.getPodMetrics(ctx, pod)
 	if err == nil && len(podMetrics) == 0 {
 		err = fmt.Errorf("no metrics known for pod \"%s/%s\"", pod.Namespace, pod.Name)
 	}
@@ -124,7 +124,7 @@ func (m *MetricStorage) Get(ctx context.Context, name string, opts *metav1.GetOp
 	return &podMetrics[0], nil
 }
 
-func (m *MetricStorage) getPodMetrics(pods ...*v1.Pod) ([]metrics.PodMetrics, error) {
+func (m *MetricStorage) getPodMetrics(ctx context.Context, pods ...*v1.Pod) ([]metrics.PodMetrics, error) {
 	namespacedNames := make([]apitypes.NamespacedName, len(pods))
 	for i, pod := range pods {
 		namespacedNames[i] = apitypes.NamespacedName{
@@ -132,7 +132,7 @@ func (m *MetricStorage) getPodMetrics(pods ...*v1.Pod) ([]metrics.PodMetrics, er
 			Namespace: pod.Namespace,
 		}
 	}
-	timestamps, containerMetrics, err := m.prov.GetContainerMetrics(namespacedNames...)
+	timestamps, containerMetrics, err := m.prov.GetContainerMetrics(ctx, namespacedNames...)
 	if err != nil {
 		return nil, err
 	}

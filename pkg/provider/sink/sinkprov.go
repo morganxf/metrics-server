@@ -15,6 +15,7 @@
 package sink
 
 import (
+	"context"
 	"fmt"
 	"sync"
 	"time"
@@ -51,7 +52,7 @@ func NewSinkProvider() (sink.MetricSink, provider.MetricsProvider) {
 // we don't get the actual window from cAdvisor, so we could just
 // plumb down metric resolution, but that wouldn't be actually correct.
 
-func (p *sinkMetricsProvider) GetNodeMetrics(nodes ...string) ([]provider.TimeInfo, []corev1.ResourceList, error) {
+func (p *sinkMetricsProvider) GetNodeMetrics(ctx context.Context, nodes ...string) ([]provider.TimeInfo, []corev1.ResourceList, error) {
 	p.mu.RLock()
 	defer p.mu.RUnlock()
 
@@ -77,7 +78,7 @@ func (p *sinkMetricsProvider) GetNodeMetrics(nodes ...string) ([]provider.TimeIn
 	return timestamps, resMetrics, nil
 }
 
-func (p *sinkMetricsProvider) GetContainerMetrics(pods ...apitypes.NamespacedName) ([]provider.TimeInfo, [][]metrics.ContainerMetrics, error) {
+func (p *sinkMetricsProvider) GetContainerMetrics(ctx context.Context, pods ...apitypes.NamespacedName) ([]provider.TimeInfo, [][]metrics.ContainerMetrics, error) {
 	p.mu.RLock()
 	defer p.mu.RUnlock()
 

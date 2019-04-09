@@ -15,6 +15,7 @@
 package sink_test
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -86,13 +87,13 @@ var _ = Describe("In-memory Sink Provider", func() {
 
 		By("making sure that the provider contains all nodes received")
 		for _, node := range batch.Nodes {
-			_, _, err := prov.GetNodeMetrics(node.Name)
+			_, _, err := prov.GetNodeMetrics(context.TODO(), node.Name)
 			Expect(err).NotTo(HaveOccurred())
 		}
 
 		By("making sure that the provider contains all pods received")
 		for _, pod := range batch.Pods {
-			_, _, err := prov.GetContainerMetrics(apitypes.NamespacedName{
+			_, _, err := prov.GetContainerMetrics(context.TODO(), apitypes.NamespacedName{
 				Name:      pod.Name,
 				Namespace: pod.Namespace,
 			})
@@ -109,12 +110,12 @@ var _ = Describe("In-memory Sink Provider", func() {
 
 		By("making sure none of the data is in the sink")
 		for _, node := range batch.Nodes {
-			_, res, err := prov.GetNodeMetrics(node.Name)
+			_, res, err := prov.GetNodeMetrics(context.TODO(), node.Name)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(res).To(ConsistOf(corev1.ResourceList(nil)))
 		}
 		for _, pod := range batch.Pods {
-			_, res, err := prov.GetContainerMetrics(apitypes.NamespacedName{
+			_, res, err := prov.GetContainerMetrics(context.TODO(), apitypes.NamespacedName{
 				Name:      pod.Name,
 				Namespace: pod.Namespace,
 			})
@@ -132,12 +133,12 @@ var _ = Describe("In-memory Sink Provider", func() {
 
 		By("making sure none of the data is in the sink")
 		for _, node := range batch.Nodes {
-			_, res, err := prov.GetNodeMetrics(node.Name)
+			_, res, err := prov.GetNodeMetrics(context.TODO(), node.Name)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(res).To(ConsistOf(corev1.ResourceList(nil)))
 		}
 		for _, pod := range batch.Pods {
-			_, res, err := prov.GetContainerMetrics(apitypes.NamespacedName{
+			_, res, err := prov.GetContainerMetrics(context.TODO(), apitypes.NamespacedName{
 				Name:      pod.Name,
 				Namespace: pod.Namespace,
 			})
@@ -151,10 +152,11 @@ var _ = Describe("In-memory Sink Provider", func() {
 		Expect(provSink.Receive(batch)).To(Succeed())
 
 		By("fetching the pod")
-		ts, containerMetrics, err := prov.GetContainerMetrics(apitypes.NamespacedName{
+		ts, containerMetrics, err := prov.GetContainerMetrics(context.TODO(), apitypes.NamespacedName{
 			Name:      "pod1",
 			Namespace: "ns1",
 		})
+
 		Expect(err).NotTo(HaveOccurred())
 
 		By("verifying that the timestamp is the smallest time amongst all containers")
@@ -188,7 +190,7 @@ var _ = Describe("In-memory Sink Provider", func() {
 		Expect(provSink.Receive(batch)).To(Succeed())
 
 		By("fetching the a present pod and a missing pod")
-		ts, containerMetrics, err := prov.GetContainerMetrics(apitypes.NamespacedName{
+		ts, containerMetrics, err := prov.GetContainerMetrics(context.TODO(), apitypes.NamespacedName{
 			Name:      "pod1",
 			Namespace: "ns1",
 		}, apitypes.NamespacedName{
@@ -230,7 +232,7 @@ var _ = Describe("In-memory Sink Provider", func() {
 		Expect(provSink.Receive(batch)).To(Succeed())
 
 		By("fetching the nodes")
-		ts, nodeMetrics, err := prov.GetNodeMetrics("node1", "node2")
+		ts, nodeMetrics, err := prov.GetNodeMetrics(context.TODO(), "node1", "node2")
 		Expect(err).NotTo(HaveOccurred())
 
 		By("verifying that the timestamp is the smallest time amongst all containers")
@@ -256,7 +258,7 @@ var _ = Describe("In-memory Sink Provider", func() {
 		Expect(provSink.Receive(batch)).To(Succeed())
 
 		By("fetching the nodes, plus a missing node")
-		ts, nodeMetrics, err := prov.GetNodeMetrics("node1", "node2", "node42")
+		ts, nodeMetrics, err := prov.GetNodeMetrics(context.TODO(), "node1", "node2", "node42")
 		Expect(err).NotTo(HaveOccurred())
 
 		By("verifying that the timestamp is the smallest time amongst all containers")
